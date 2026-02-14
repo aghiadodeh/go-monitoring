@@ -214,12 +214,12 @@ All settings can be controlled via **environment variables** or by passing a `*m
 cfg := &monitoring.Config{
     RequestSaveEnabled: true,
     AuthRequired:       true,
-    JWTSecret:          "my-secret",
+    JWTSecret:          "my-jwt-secret",
     BufferSize:         20000,
     BatchSize:          200,
     Workers:            2,
     MaxBodySize:        128 * 1024, // 128KB
-    SkipPaths:          []string{"/api/monitoring", "/health"},
+    SkipPaths:          []string{"/api/monitoring", "monitoring", "/.well-known", "/health"},
     UserContextKey:     "user",
     CaptureReqBody:     true,
     CaptureRespBody:    true,
