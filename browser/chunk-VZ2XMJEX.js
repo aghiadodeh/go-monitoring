@@ -1,0 +1,1 @@
+import{H as i}from"./chunk-26LTUHHF.js";import{Hb as o,gb as n}from"./chunk-7JRIQJWH.js";var a=class e{static \u0275fac=function(t){return new(t||e)};static \u0275cmp=n({type:e,selectors:[["app-authentication"]],decls:1,vars:0,template:function(t,r){t&1&&o(0,"router-outlet")},dependencies:[i],encapsulation:2})};export{a as Authentication};

@@ -1,0 +1,1 @@
+var o=window.location.origin=="http://localhost:4203"?"http://localhost:8088":window.location.origin,t="go_fiber",n={orm:t,SERVER_BASE_URL:o,API_URL:`${o}/api`,PAGE_SIZE:15,DEFAULT_COLOR:"#2196F3",DIALOG_CONFIGURATION:{width:"50vw",contentStyle:{overflow:"auto"},breakpoints:{"960px":"75vw","640px":"90vw"}}};export{n as a};

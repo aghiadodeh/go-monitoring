@@ -68,13 +68,40 @@ func New(cfg MiddlewareConfig) fiber.Handler {
 		handlerErr := c.Next()
 		duration := float64(time.Since(start).Milliseconds())
 
+		// If the handler returned an error (e.g. fiber.NewError(400, "msg")
+		// or a raw GORM error), Fiber's ErrorHandler has NOT run yet — the
+		// response is still at its default state (status 200, empty body).
+		// Invoke the app's ErrorHandler now so it writes the real response
+		// (status code + JSON body) before we capture it.
+		if handlerErr != nil {
+			if err := c.App().Config().ErrorHandler(c, handlerErr); err != nil {
+				_ = c.SendStatus(fiber.StatusInternalServerError)
+			}
+		}
+
 		// --- Capture response data (synchronous – after handler) ---
+		// At this point the response is fully populated: either the handler
+		// wrote it directly, or the ErrorHandler just wrote it above.
 		statusCode := c.Response().StatusCode()
+
+		// ignore 404 status code
+		if statusCode == 404 && !strings.HasPrefix(path, "/api/") {
+			return nil
+		}
+
 		success := statusCode < 400
 
 		var respBody json.RawMessage
 		if cfg.CaptureRespBody {
 			respBody = copyBytes(c.Response().Body(), cfg.MaxBodySize)
+		}
+
+		// Capture the raw Go error (e.g. GORM errors) for debugging.
+		// This preserves the full error chain separately from the
+		// client-facing response body written by the ErrorHandler.
+		var exception interface{}
+		if handlerErr != nil {
+			exception = handlerErr.Error()
 		}
 
 		respHeaders := captureResponseHeaders(c)
@@ -101,6 +128,7 @@ func New(cfg MiddlewareConfig) fiber.Handler {
 		responseJSON, _ := json.Marshal(map[string]interface{}{
 			"statusCode": statusCode,
 			"body":       respBody,
+			"exception":  exception,
 			"datetime":   time.Now(),
 		})
 
@@ -127,7 +155,9 @@ func New(cfg MiddlewareConfig) fiber.Handler {
 		// Non-blocking enqueue — all DB work happens in the Writer goroutine.
 		cfg.Writer.Write(entry)
 
-		return handlerErr
+		// Return nil — we already invoked the ErrorHandler above,
+		// so Fiber must not call it a second time.
+		return nil
 	}
 }
 

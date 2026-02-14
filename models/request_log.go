@@ -18,7 +18,7 @@ type RequestLog struct {
 	Request         datatypes.JSON `gorm:"type:json" json:"request"`
 	Response        datatypes.JSON `gorm:"type:json" json:"response"`
 	ResponseHeaders datatypes.JSON `gorm:"type:json" json:"responseHeaders"`
-	Success         bool           `gorm:"default:true" json:"success"`
+	Success         bool           `gorm:"not null" json:"success"`
 	Duration        float64        `gorm:"type:double precision" json:"duration"`
 	CreatedAt       time.Time      `gorm:"index" json:"createdAt"`
 	UpdatedAt       time.Time      `json:"updatedAt"`

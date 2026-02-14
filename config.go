@@ -41,7 +41,7 @@ func DefaultConfig() *Config {
 	return &Config{
 		RequestSaveEnabled: envBool("MONITORING_REQUEST_SAVE_ENABLED", true),
 		DashboardEnabled:   envBool("MONITORING_DASHBOARD_ENABLED", true),
-		DashboardPath:      envStr("MONITORING_DASHBOARD_PATH", ""),
+		DashboardPath:      envStr("MONITORING_DASHBOARD_PATH", "./vendor/github.com/aghiadodeh/go-monitoring/browser"),
 		AuthRequired:       envBool("MONITORING_AUTH_REQUIRED", false),
 		APIsEnabled:        envBool("MONITORING_APIS_ENABLED", true),
 		Username:           envStr("MONITORING_USERNAME", "admin"),
@@ -53,7 +53,7 @@ func DefaultConfig() *Config {
 		FlushInterval: time.Duration(envInt("MONITORING_FLUSH_INTERVAL_MS", 5000)) * time.Millisecond,
 		Workers:       envInt("MONITORING_WORKERS", 1),
 
-		SkipPaths:       []string{"/api/monitoring"},
+		SkipPaths:       []string{"/api/monitoring", "/monitoring", "/.well-known"},
 		UserContextKey:  "user",
 		MaxBodySize:     64 * 1024, // 64KB
 		CaptureReqBody:  true,

@@ -26,6 +26,27 @@ go get github.com/aghiadodeh/go-monitoring
 
 ---
 
+## Important Note for Developers
+
+> **Global middlewares must skip the monitoring paths.**
+>
+> If your application registers global middleware (e.g. a response transformer, custom serializer, etc.), you **must** exclude `/monitoring` and `/api/monitoring` from it. Otherwise the middleware will interfere with the monitoring dashboard and API responses (e.g. wrapping HTML in JSON, altering headers, or breaking the SPA).
+
+```go
+app.Use(func(c *fiber.Ctx) error {
+    path := c.Path()
+    if strings.HasPrefix(path, "/api/monitoring") || strings.HasPrefix(path, "/monitoring") {
+        return c.Next()
+    }
+    // your custom middleware logic
+    return myCustomMiddleware(c)
+})
+```
+
+Make sure these `c.Next()` skips are in place **before** calling `monitoring.Setup(app, db)`.
+
+---
+
 ## Quick Start
 
 ```go
@@ -53,8 +74,8 @@ func main() {
     app := fiber.New()
 
     // 3. Setup monitoring (uses env-var defaults)
+    // Must be called BEFORE registering your routes.
     m := monitoring.Setup(app, db)
-    defer m.Shutdown() // flush pending logs on shutdown
 
     // 4. Your routes
     app.Get("/", func(c *fiber.Ctx) error {
@@ -177,7 +198,7 @@ All settings can be controlled via **environment variables** or by passing a `*m
 | --------------------------------- | --------- | -------------------------------------- |
 | `MONITORING_REQUEST_SAVE_ENABLED` | `true`    | Enable/disable request logging         |
 | `MONITORING_DASHBOARD_ENABLED`    | `true`    | Serve the static frontend dashboard    |
-| `MONITORING_DASHBOARD_PATH`       | _(empty)_ | Filesystem path to the dashboard build |
+| `MONITORING_DASHBOARD_PATH`       | `./vendor/github.com/aghiadodeh/go-monitoring/browser` | Filesystem path to the dashboard build |
 | `MONITORING_AUTH_REQUIRED`        | `false`   | Require JWT for analytics API          |
 | `MONITORING_APIS_ENABLED`         | `true`    | Enable analytics API endpoints         |
 | `MONITORING_USERNAME`             | `admin`   | Dashboard login username               |
@@ -296,7 +317,7 @@ HTTP Request
 - The middleware **never** performs a DB write directly.
 - Log entries are sent to a buffered channel (non-blocking; if full, the entry is dropped to protect latency).
 - A background goroutine collects entries and flushes them in **batch INSERTs** (single multi-row INSERT statement), dramatically reducing DB round-trips.
-- On application shutdown, `m.Shutdown()` flushes all remaining entries.
+- On application shutdown, all remaining entries are flushed automatically via Fiber's `OnShutdown` hook — no manual `m.Shutdown()` call is needed.
 
 ---
 

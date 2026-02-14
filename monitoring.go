@@ -3,16 +3,22 @@
 // It captures every HTTP request/response, stores them asynchronously in a database via a
 // high-performance batched log writer, and exposes analytics API endpoints protected by JWT.
 //
+// The writer is automatically flushed when app.Shutdown() is called,
+// so there is no need to call m.Shutdown() manually in most cases.
+//
 // Usage:
 //
 //	m := monitoring.Setup(app, db)          // uses env-var defaults
 //	m := monitoring.Setup(app, db, &cfg)    // custom config
-//	defer m.Shutdown()
 //
 //	m.LogJob("send-emails", true, map[string]any{"count": 42})
 package monitoring
 
 import (
+	"os"
+	"path/filepath"
+	"strings"
+
 	"github.com/aghiadodeh/go-monitoring/auth"
 	"github.com/aghiadodeh/go-monitoring/handlers"
 	"github.com/aghiadodeh/go-monitoring/logwriter"
@@ -50,6 +56,15 @@ func Setup(app *fiber.App, db *gorm.DB, cfg ...*Config) *Monitor {
 		BatchSize:     c.BatchSize,
 		FlushInterval: c.FlushInterval,
 		Workers:       c.Workers,
+	})
+
+	// ---- add response transformer middleware ----
+	app.Use(func(c *fiber.Ctx) error {
+		path := c.Path()
+		if strings.HasPrefix(path, "/api/monitoring") {
+			return middleware.ResponseTransformer(c)
+		}
+		return c.Next()
 	})
 
 	// ---- request monitoring middleware (applied globally) ----
@@ -93,16 +108,62 @@ func Setup(app *fiber.App, db *gorm.DB, cfg ...*Config) *Monitor {
 	// Clear all
 	protected.Delete("/clear", jobHandler.ClearAll)
 
-	// ---- optional static dashboard ----
+	// ---- optional static dashboard (SPA) ----
 	if c.DashboardEnabled && c.DashboardPath != "" {
-		app.Static("/monitoring", c.DashboardPath)
+		dashboardPath := filepath.Clean(c.DashboardPath)
+		indexFile := filepath.Join(dashboardPath, "index.html")
+
+		// serveIndex sends index.html with the correct Content-Type.
+		// This is used both for the base route and as a SPA fallback.
+		serveIndex := func(ctx *fiber.Ctx) error {
+			html, err := os.ReadFile(indexFile)
+			if err != nil {
+				return ctx.Status(fiber.StatusNotFound).SendString("Dashboard not found")
+			}
+			ctx.Set(fiber.HeaderContentType, fiber.MIMETextHTMLCharsetUTF8)
+			return ctx.Send(html)
+		}
+
+		app.Get("/monitoring", serveIndex)
+
+		// Wildcard handler: serve static files if they exist on disk,
+		// otherwise fall back to index.html for SPA client-side routing.
+		app.Get("/monitoring/*", func(ctx *fiber.Ctx) error {
+			// Resolve the requested file path
+			requestedPath := ctx.Params("*")
+			filePath := filepath.Join(dashboardPath, filepath.Clean(requestedPath))
+
+			// Prevent path traversal outside the dashboard directory
+			if !strings.HasPrefix(filePath, dashboardPath) {
+				return serveIndex(ctx)
+			}
+
+			// If the file exists and is not a directory, serve it
+			if info, err := os.Stat(filePath); err == nil && !info.IsDir() {
+				return ctx.SendFile(filePath)
+			}
+
+			// SPA fallback: let the client-side router handle it
+			return serveIndex(ctx)
+		})
 	}
 
-	return &Monitor{
+	m := &Monitor{
 		config:     c,
 		writer:     w,
 		jobService: jobService,
 	}
+
+	// ---- auto-flush on server shutdown ----
+	// Fiber calls OnShutdown hooks when app.Shutdown() is invoked,
+	// which happens after the server stops accepting new requests.
+	// This ensures all in-flight entries are flushed before exit.
+	app.Hooks().OnShutdown(func() error {
+		m.Shutdown()
+		return nil
+	})
+
+	return m
 }
 
 // LogJob records a background / cron job execution.

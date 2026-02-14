@@ -19,6 +19,9 @@ type Writer struct {
 	flushInterval time.Duration
 	done          chan struct{}
 	wg            sync.WaitGroup
+	mu            sync.RWMutex
+	closed        bool
+	once          sync.Once
 }
 
 // Options configures the Writer.
@@ -61,8 +64,16 @@ func New(db *gorm.DB, opts Options) *Writer {
 }
 
 // Write enqueues a log entry. It never blocks the caller: if the
-// buffer is full the entry is silently dropped.
+// buffer is full or the writer has been shut down, the entry is
+// silently dropped.
 func (w *Writer) Write(entry models.RequestLog) {
+	w.mu.RLock()
+	defer w.mu.RUnlock()
+
+	if w.closed {
+		return
+	}
+
 	select {
 	case w.ch <- entry:
 	default:
@@ -72,11 +83,17 @@ func (w *Writer) Write(entry models.RequestLog) {
 }
 
 // Shutdown closes the channel and waits for all pending entries
-// to be flushed. Call this on application shutdown.
+// to be flushed. It is safe to call multiple times.
 func (w *Writer) Shutdown() {
-	close(w.ch)
-	w.wg.Wait()
-	close(w.done)
+	w.once.Do(func() {
+		w.mu.Lock()
+		w.closed = true
+		w.mu.Unlock()
+
+		close(w.ch)
+		w.wg.Wait()
+		close(w.done)
+	})
 }
 
 // Done returns a channel that is closed after Shutdown completes.
