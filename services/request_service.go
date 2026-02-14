@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aghiad-odeh/go-monitoring/dto"
-	"github.com/aghiad-odeh/go-monitoring/models"
+	"github.com/aghiadodeh/go-monitoring/dto"
+	"github.com/aghiadodeh/go-monitoring/models"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -71,15 +71,15 @@ func (s *RequestService) FindByID(id string) (*models.RequestLog, error) {
 
 // AnalyzeResult is the shape returned by Analyze.
 type AnalyzeResult struct {
-	FromDate           time.Time           `json:"fromDate"`
-	ToDate             time.Time           `json:"toDate"`
-	Total              int64               `json:"total"`
-	Success            int64               `json:"success"`
-	Exceptions         int64               `json:"exceptions"`
-	Duration           []DurationBucket    `json:"duration"`
-	DurationURLs       []DurationURL       `json:"durationURLs"`
-	CreatedAt          []TimeBucket        `json:"createdAt"`
-	DurationBoundaries []float64           `json:"durationBoundaries"`
+	FromDate           time.Time        `json:"fromDate"`
+	ToDate             time.Time        `json:"toDate"`
+	Total              int64            `json:"total"`
+	Success            int64            `json:"success"`
+	Exceptions         int64            `json:"exceptions"`
+	Duration           []DurationBucket `json:"duration"`
+	DurationURLs       []DurationURL    `json:"durationURLs"`
+	CreatedAt          []TimeBucket     `json:"createdAt"`
+	DurationBoundaries []float64        `json:"durationBoundaries"`
 }
 
 // DurationBucket groups requests by response-time range.

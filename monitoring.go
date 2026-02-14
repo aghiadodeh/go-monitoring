@@ -13,11 +13,11 @@
 package monitoring
 
 import (
-	"github.com/aghiad-odeh/go-monitoring/auth"
-	"github.com/aghiad-odeh/go-monitoring/handlers"
-	"github.com/aghiad-odeh/go-monitoring/logwriter"
-	"github.com/aghiad-odeh/go-monitoring/middleware"
-	"github.com/aghiad-odeh/go-monitoring/services"
+	"github.com/aghiadodeh/go-monitoring/auth"
+	"github.com/aghiadodeh/go-monitoring/handlers"
+	"github.com/aghiadodeh/go-monitoring/logwriter"
+	"github.com/aghiadodeh/go-monitoring/middleware"
+	"github.com/aghiadodeh/go-monitoring/services"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )

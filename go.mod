@@ -1,4 +1,4 @@
-module github.com/aghiad-odeh/go-monitoring
+module github.com/aghiadodeh/go-monitoring
 
 go 1.22.0
 

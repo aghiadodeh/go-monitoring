@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aghiad-odeh/go-monitoring/logwriter"
-	"github.com/aghiad-odeh/go-monitoring/models"
+	"github.com/aghiadodeh/go-monitoring/logwriter"
+	"github.com/aghiadodeh/go-monitoring/models"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/datatypes"
 )

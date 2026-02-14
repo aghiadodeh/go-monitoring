@@ -38,7 +38,7 @@ import (
     "gorm.io/driver/postgres"
     "gorm.io/gorm"
 
-    monitoring "github.com/aghiad-odeh/go-monitoring"
+    monitoring "github.com/aghiadodeh/go-monitoring"
 )
 
 func main() {

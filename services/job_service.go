@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/aghiad-odeh/go-monitoring/dto"
-	"github.com/aghiad-odeh/go-monitoring/models"
+	"github.com/aghiadodeh/go-monitoring/dto"
+	"github.com/aghiadodeh/go-monitoring/models"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )

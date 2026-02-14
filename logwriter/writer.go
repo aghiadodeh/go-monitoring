@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/aghiad-odeh/go-monitoring/models"
+	"github.com/aghiadodeh/go-monitoring/models"
 	"gorm.io/gorm"
 )
 

@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"github.com/aghiad-odeh/go-monitoring/dto"
-	"github.com/aghiad-odeh/go-monitoring/services"
+	"github.com/aghiadodeh/go-monitoring/dto"
+	"github.com/aghiadodeh/go-monitoring/services"
 	"github.com/gofiber/fiber/v2"
 )
 
