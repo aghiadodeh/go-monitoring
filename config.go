@@ -13,7 +13,7 @@ type Config struct {
 
 	// Dashboard
 	DashboardEnabled bool
-	DashboardPath    string // filesystem path to the browser build
+	DashboardPath    string // optional filesystem path override (empty = use embedded assets)
 
 	// Authentication
 	AuthRequired bool
@@ -41,7 +41,7 @@ func DefaultConfig() *Config {
 	return &Config{
 		RequestSaveEnabled: envBool("MONITORING_REQUEST_SAVE_ENABLED", true),
 		DashboardEnabled:   envBool("MONITORING_DASHBOARD_ENABLED", true),
-		DashboardPath:      envStr("MONITORING_DASHBOARD_PATH", "./vendor/github.com/aghiadodeh/go-monitoring/browser"),
+		DashboardPath:      envStr("MONITORING_DASHBOARD_PATH", ""),
 		AuthRequired:       envBool("MONITORING_AUTH_REQUIRED", false),
 		APIsEnabled:        envBool("MONITORING_APIS_ENABLED", true),
 		Username:           envStr("MONITORING_USERNAME", "admin"),

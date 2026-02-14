@@ -198,7 +198,7 @@ All settings can be controlled via **environment variables** or by passing a `*m
 | --------------------------------- | --------- | -------------------------------------- |
 | `MONITORING_REQUEST_SAVE_ENABLED` | `true`    | Enable/disable request logging         |
 | `MONITORING_DASHBOARD_ENABLED`    | `true`    | Serve the static frontend dashboard    |
-| `MONITORING_DASHBOARD_PATH`       | `./vendor/github.com/aghiadodeh/go-monitoring/browser` | Filesystem path to the dashboard build |
+| `MONITORING_DASHBOARD_PATH`       | _(empty)_ | Filesystem path to the dashboard build |
 | `MONITORING_AUTH_REQUIRED`        | `false`   | Require JWT for analytics API          |
 | `MONITORING_APIS_ENABLED`         | `true`    | Enable analytics API endpoints         |
 | `MONITORING_USERNAME`             | `admin`   | Dashboard login username               |

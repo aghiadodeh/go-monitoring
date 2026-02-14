@@ -15,8 +15,10 @@
 package monitoring
 
 import (
+	"io/fs"
+	"mime"
 	"os"
-	"path/filepath"
+	"path"
 	"strings"
 
 	"github.com/aghiadodeh/go-monitoring/auth"
@@ -109,14 +111,25 @@ func Setup(app *fiber.App, db *gorm.DB, cfg ...*Config) *Monitor {
 	protected.Delete("/clear", jobHandler.ClearAll)
 
 	// ---- optional static dashboard (SPA) ----
-	if c.DashboardEnabled && c.DashboardPath != "" {
-		dashboardPath := filepath.Clean(c.DashboardPath)
-		indexFile := filepath.Join(dashboardPath, "index.html")
+	if c.DashboardEnabled {
+		var dashFS fs.FS
+
+		if c.DashboardPath != "" {
+			// Use custom filesystem path (for development or custom builds)
+			dashFS = os.DirFS(c.DashboardPath)
+		} else {
+			// Use embedded browser files (default)
+			sub, err := fs.Sub(browserFS, "browser")
+			if err != nil {
+				panic("go-monitoring: embedded browser assets not found: " + err.Error())
+			}
+			dashFS = sub
+		}
 
 		// serveIndex sends index.html with the correct Content-Type.
 		// This is used both for the base route and as a SPA fallback.
 		serveIndex := func(ctx *fiber.Ctx) error {
-			html, err := os.ReadFile(indexFile)
+			html, err := fs.ReadFile(dashFS, "index.html")
 			if err != nil {
 				return ctx.Status(fiber.StatusNotFound).SendString("Dashboard not found")
 			}
@@ -126,25 +139,29 @@ func Setup(app *fiber.App, db *gorm.DB, cfg ...*Config) *Monitor {
 
 		app.Get("/monitoring", serveIndex)
 
-		// Wildcard handler: serve static files if they exist on disk,
+		// Wildcard handler: serve static files if they exist,
 		// otherwise fall back to index.html for SPA client-side routing.
 		app.Get("/monitoring/*", func(ctx *fiber.Ctx) error {
-			// Resolve the requested file path
 			requestedPath := ctx.Params("*")
-			filePath := filepath.Join(dashboardPath, filepath.Clean(requestedPath))
+			cleanPath := path.Clean(requestedPath)
 
-			// Prevent path traversal outside the dashboard directory
-			if !strings.HasPrefix(filePath, dashboardPath) {
+			// Prevent path traversal
+			if cleanPath == "." || strings.HasPrefix(cleanPath, "..") {
 				return serveIndex(ctx)
 			}
 
-			// If the file exists and is not a directory, serve it
-			if info, err := os.Stat(filePath); err == nil && !info.IsDir() {
-				return ctx.SendFile(filePath)
+			// Try to serve the static file
+			content, err := fs.ReadFile(dashFS, cleanPath)
+			if err != nil {
+				// File not found → SPA fallback
+				return serveIndex(ctx)
 			}
 
-			// SPA fallback: let the client-side router handle it
-			return serveIndex(ctx)
+			// Set Content-Type based on file extension
+			if ct := mime.TypeByExtension(path.Ext(cleanPath)); ct != "" {
+				ctx.Set(fiber.HeaderContentType, ct)
+			}
+			return ctx.Send(content)
 		})
 	}
 
