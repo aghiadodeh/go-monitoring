@@ -249,7 +249,7 @@ All endpoints are prefixed with `/api/monitoring` and optionally protected by JW
 **Response:**
 
 ```json
-{ "token": "eyJhbGci...", "success": true }
+{ "data": "eyJhbGci...", "success": true }
 ```
 
 ### Request Logs
