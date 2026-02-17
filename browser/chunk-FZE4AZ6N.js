@@ -1,0 +1,1 @@
+var o="http://178.79.129.206:8088",t="go_fiber",e={orm:t,SERVER_BASE_URL:o,API_URL:`${o}/api`,PAGE_SIZE:15,DEFAULT_COLOR:"#2196F3",DIALOG_CONFIGURATION:{width:"50vw",contentStyle:{overflow:"auto"},breakpoints:{"960px":"75vw","640px":"90vw"}}};export{e as a};
