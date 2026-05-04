@@ -26,7 +26,7 @@ func (s *JobService) Create(name string, success bool, metadata any) error {
 	}
 	return s.DB.Create(&models.JobLog{
 		Name:     name,
-		Success:  success,
+		Success:  &success,
 		Metadata: metaJSON,
 	}).Error
 }
